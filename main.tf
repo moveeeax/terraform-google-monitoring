@@ -13,8 +13,8 @@ resource "google_monitoring_alert_policy" "this" {
       duration        = var.duration
 
       aggregations {
-        alignment_period   = "60s"
-        per_series_aligner = "ALIGN_MEAN"
+        alignment_period   = var.alignment_period
+        per_series_aligner = var.per_series_aligner
       }
     }
   }
