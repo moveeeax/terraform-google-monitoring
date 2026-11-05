@@ -19,7 +19,7 @@ resource "google_monitoring_notification_channel" "email" {
 }
 
 module "monitoring" {
-  source = "github.com/moveeeax/terraform-google-monitoring"
+  source = "github.com/moveeeax/terraform-google-monitoring?ref=v1.0.0"
 
   project_id      = var.project_id
   display_name    = "High CPU utilization"
