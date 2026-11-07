@@ -7,6 +7,8 @@ in the [GitHub releases](https://github.com/moveeeax/terraform-google-monitoring
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-07
+
 ### Added
 
 - `documentation` input (`content`, `mime_type` defaulting to `text/markdown`,
@@ -16,4 +18,5 @@ in the [GitHub releases](https://github.com/moveeeax/terraform-google-monitoring
 - `auto_close` input rendering `alert_strategy.auto_close`, unset by default
   so existing policies plan no change.
 
-[Unreleased]: https://github.com/moveeeax/terraform-google-monitoring/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/moveeeax/terraform-google-monitoring/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/moveeeax/terraform-google-monitoring/compare/v1.1.0...v1.2.0
