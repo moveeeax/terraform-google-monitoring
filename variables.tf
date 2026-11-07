@@ -173,11 +173,12 @@ variable "severity" {
 variable "auto_close" {
   description = <<-EOT
     How long an open incident stays open once the policy has no data for it,
-    as a seconds string such as "1800s". Defaults to "1800s" (30 minutes). Set
-    it to null to omit alert_strategy and keep the API's own behaviour.
+    as a seconds string such as "1800s". Unset by default, which omits
+    alert_strategy and keeps the API's own behaviour; "1800s" (30 minutes) is
+    a reasonable value for most policies.
   EOT
   type        = string
-  default     = "1800s"
+  default     = null
 
   validation {
     condition     = var.auto_close == null || can(regex("^[0-9]+s$", var.auto_close))

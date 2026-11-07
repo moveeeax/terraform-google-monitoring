@@ -208,7 +208,7 @@ run "rejects_empty_notification_channel_id" {
 
 # --- documentation, severity, auto-close, labels ------------------------------
 
-run "new_inputs_default_to_unset_except_auto_close" {
+run "new_inputs_default_to_unset" {
   assert {
     condition     = length(google_monitoring_alert_policy.this.documentation) == 0
     error_message = "No documentation block must be sent unless documentation is set."
@@ -225,8 +225,8 @@ run "new_inputs_default_to_unset_except_auto_close" {
   }
 
   assert {
-    condition     = google_monitoring_alert_policy.this.alert_strategy[0].auto_close == "1800s"
-    error_message = "auto_close must default to 1800s so open incidents close."
+    condition     = length(google_monitoring_alert_policy.this.alert_strategy) == 0
+    error_message = "auto_close must be unset by default so existing policies plan no diff."
   }
 }
 

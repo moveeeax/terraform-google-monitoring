@@ -59,12 +59,11 @@ whose configuration carries a secret — a Slack or PagerDuty webhook URL with a
 embedded token, for example — put it in the provider's `sensitive_labels` block
 rather than `labels`. Values in `labels` are stored and rendered in plaintext.
 
-**Incidents auto-close after 30 minutes without data.** `auto_close` defaults
-to `"1800s"` and renders `alert_strategy.auto_close`; the provider describes it
-as "if an alert policy that was active has no data for this long, any open
-incidents will close". Set another seconds string to change the window, or
-`null` to omit `alert_strategy` and keep the API's own behaviour, which is what
-the module did before this input existed.
+**Auto-closing incidents.** `auto_close` renders `alert_strategy.auto_close`;
+the provider describes it as "if an alert policy that was active has no data
+for this long, any open incidents will close". It is unset by default, so
+`alert_strategy` is omitted and existing policies plan no change. Set it to a
+seconds string such as `"1800s"` (30 minutes) to opt in.
 
 **Documentation and severity.** `documentation.content` is sent with every
 notification, so put the runbook link there. Cloud Monitoring only supports
@@ -100,7 +99,7 @@ so the policy reads correctly and stays forward-compatible.
 | `per_series_aligner`     | `ALIGN_*` aligner applied before comparison.                       | `string`       | `"ALIGN_MEAN"`       |    no    |
 | `documentation`          | `{ content, mime_type = "text/markdown", subject = null }`.        | `object`       | `null`               |    no    |
 | `severity`               | `CRITICAL`, `ERROR` or `WARNING`.                                  | `string`       | `null`               |    no    |
-| `auto_close`             | Seconds string; closes incidents with no data. `null` omits it.    | `string`       | `"1800s"`            |    no    |
+| `auto_close`             | Seconds string; closes incidents with no data. `null` omits it.    | `string`       | `null`               |    no    |
 | `user_labels`            | Lowercase labels for organising policies.                          | `map(string)`  | `{}`                 |    no    |
 
 ## Outputs
