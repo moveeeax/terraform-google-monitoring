@@ -28,6 +28,12 @@ module "monitoring" {
   comparison      = "COMPARISON_GT"
   duration        = "120s"
 
+  severity = "WARNING"
+  documentation = {
+    content = "CPU above 80% for 2 minutes. Runbook: https://example.com/runbooks/high-cpu"
+  }
+  user_labels = { team = "platform" }
+
   notification_channels = [google_monitoring_notification_channel.email.id]
 }
 ```
@@ -52,6 +58,19 @@ channels; it only attaches channel IDs you pass in. If you create a channel
 whose configuration carries a secret — a Slack or PagerDuty webhook URL with an
 embedded token, for example — put it in the provider's `sensitive_labels` block
 rather than `labels`. Values in `labels` are stored and rendered in plaintext.
+
+**Incidents auto-close after 30 minutes without data.** `auto_close` defaults
+to `"1800s"` and renders `alert_strategy.auto_close`; the provider describes it
+as "if an alert policy that was active has no data for this long, any open
+incidents will close". Set another seconds string to change the window, or
+`null` to omit `alert_strategy` and keep the API's own behaviour, which is what
+the module did before this input existed.
+
+**Documentation and severity.** `documentation.content` is sent with every
+notification, so put the runbook link there. Cloud Monitoring only supports
+`text/markdown` for `mime_type`, and the module rejects anything else.
+`severity` is shown on the incident page and in notifications; it is unset
+unless you pass `CRITICAL`, `ERROR` or `WARNING`.
 
 **`combiner` and the single condition.** This module creates exactly one
 condition, so `AND` and `OR` behave identically today. The variable is exposed
@@ -79,6 +98,10 @@ so the policy reads correctly and stays forward-compatible.
 | `duration`               | Seconds string; must be a multiple of 60, e.g. `"300s"`.           | `string`       | `"60s"`              |    no    |
 | `alignment_period`       | Seconds string for the aggregation window; minimum `"60s"`.        | `string`       | `"60s"`              |    no    |
 | `per_series_aligner`     | `ALIGN_*` aligner applied before comparison.                       | `string`       | `"ALIGN_MEAN"`       |    no    |
+| `documentation`          | `{ content, mime_type = "text/markdown", subject = null }`.        | `object`       | `null`               |    no    |
+| `severity`               | `CRITICAL`, `ERROR` or `WARNING`.                                  | `string`       | `null`               |    no    |
+| `auto_close`             | Seconds string; closes incidents with no data. `null` omits it.    | `string`       | `"1800s"`            |    no    |
+| `user_labels`            | Lowercase labels for organising policies.                          | `map(string)`  | `{}`                 |    no    |
 
 ## Outputs
 
