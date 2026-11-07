@@ -128,3 +128,81 @@ variable "notification_channels" {
     error_message = "notification_channels must not contain empty strings."
   }
 }
+
+variable "documentation" {
+  description = <<-EOT
+    Runbook text sent with every notification and shown on the incident page.
+    content is interpreted according to mime_type; Cloud Monitoring currently
+    only supports "text/markdown". subject optionally overrides the
+    notification subject line. Null (the default) sends no documentation.
+  EOT
+  type = object({
+    content   = string
+    mime_type = optional(string, "text/markdown")
+    subject   = optional(string)
+  })
+  default = null
+
+  validation {
+    condition     = var.documentation == null || try(length(trimspace(var.documentation.content)) > 0, false)
+    error_message = "documentation.content must not be empty."
+  }
+
+  validation {
+    condition     = var.documentation == null || try(length(var.documentation.content) <= 8192, false)
+    error_message = "documentation.content must not exceed 8192 characters."
+  }
+
+  validation {
+    condition     = var.documentation == null || try(var.documentation.mime_type == "text/markdown", false)
+    error_message = "documentation.mime_type must be \"text/markdown\", the only format Cloud Monitoring supports."
+  }
+}
+
+variable "severity" {
+  description = "Severity shown on the incident page and in notifications: CRITICAL, ERROR or WARNING. Null (the default) leaves it unset."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.severity == null || contains(["CRITICAL", "ERROR", "WARNING"], coalesce(var.severity, "-"))
+    error_message = "severity must be one of CRITICAL, ERROR or WARNING."
+  }
+}
+
+variable "auto_close" {
+  description = <<-EOT
+    How long an open incident stays open once the policy has no data for it,
+    as a seconds string such as "1800s". Unset by default, which omits
+    alert_strategy and keeps the API's own behaviour; "1800s" (30 minutes) is
+    a reasonable value for most policies.
+  EOT
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.auto_close == null || can(regex("^[0-9]+s$", var.auto_close))
+    error_message = "auto_close must be a whole number of seconds with an \"s\" suffix, e.g. \"1800s\". Values like \"30m\" or \"1800\" are rejected."
+  }
+}
+
+variable "user_labels" {
+  description = <<-EOT
+    Labels for organising alert policies (team, service, environment). Keys
+    start with a lowercase letter; keys and values use lowercase letters,
+    digits, underscores and dashes, at most 63 characters each.
+  EOT
+  type        = map(string)
+  default     = {}
+  nullable    = false
+
+  validation {
+    condition     = alltrue([for k in keys(var.user_labels) : can(regex("^[a-z][a-z0-9_-]{0,62}$", k))])
+    error_message = "user_labels keys must start with a lowercase letter and contain only lowercase letters, digits, underscores and dashes, at most 63 characters."
+  }
+
+  validation {
+    condition     = alltrue([for v in values(var.user_labels) : can(regex("^[a-z0-9_-]{0,63}$", v))])
+    error_message = "user_labels values may contain only lowercase letters, digits, underscores and dashes, at most 63 characters."
+  }
+}

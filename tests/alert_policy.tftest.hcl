@@ -205,3 +205,140 @@ run "rejects_empty_notification_channel_id" {
 
   expect_failures = [var.notification_channels]
 }
+
+# --- documentation, severity, auto-close, labels ------------------------------
+
+run "new_inputs_default_to_unset" {
+  assert {
+    condition     = length(google_monitoring_alert_policy.this.documentation) == 0
+    error_message = "No documentation block must be sent unless documentation is set."
+  }
+
+  assert {
+    condition     = google_monitoring_alert_policy.this.severity == null
+    error_message = "severity must stay unset by default."
+  }
+
+  assert {
+    condition     = google_monitoring_alert_policy.this.user_labels == null
+    error_message = "An empty user_labels map must be sent as null so existing policies plan no diff."
+  }
+
+  assert {
+    condition     = length(google_monitoring_alert_policy.this.alert_strategy) == 0
+    error_message = "auto_close must be unset by default so existing policies plan no diff."
+  }
+}
+
+run "documentation_severity_and_labels_are_passed_through" {
+  variables {
+    documentation = {
+      content = "CPU above 80%. Runbook: https://example.com/runbooks/cpu"
+      subject = "High CPU on $${resource.label.instance_id}"
+    }
+    severity    = "CRITICAL"
+    auto_close  = "3600s"
+    user_labels = { team = "platform", env = "prod" }
+  }
+
+  assert {
+    condition     = google_monitoring_alert_policy.this.documentation[0].content == "CPU above 80%. Runbook: https://example.com/runbooks/cpu"
+    error_message = "documentation.content must reach the resource."
+  }
+
+  assert {
+    condition     = google_monitoring_alert_policy.this.documentation[0].mime_type == "text/markdown"
+    error_message = "documentation.mime_type must default to text/markdown."
+  }
+
+  assert {
+    condition     = google_monitoring_alert_policy.this.documentation[0].subject == "High CPU on $${resource.label.instance_id}"
+    error_message = "documentation.subject must reach the resource unexpanded."
+  }
+
+  assert {
+    condition     = google_monitoring_alert_policy.this.severity == "CRITICAL"
+    error_message = "severity must reach the resource."
+  }
+
+  assert {
+    condition     = google_monitoring_alert_policy.this.alert_strategy[0].auto_close == "3600s"
+    error_message = "auto_close override must reach the resource."
+  }
+
+  assert {
+    condition     = google_monitoring_alert_policy.this.user_labels["team"] == "platform"
+    error_message = "user_labels must reach the resource."
+  }
+}
+
+run "null_auto_close_omits_alert_strategy" {
+  variables {
+    auto_close = null
+  }
+
+  assert {
+    condition     = length(google_monitoring_alert_policy.this.alert_strategy) == 0
+    error_message = "auto_close = null must omit alert_strategy entirely."
+  }
+}
+
+run "rejects_invalid_severity" {
+  variables {
+    severity = "HIGH"
+  }
+
+  command = plan
+
+  expect_failures = [var.severity]
+}
+
+run "rejects_minute_suffixed_auto_close" {
+  variables {
+    auto_close = "30m"
+  }
+
+  command = plan
+
+  expect_failures = [var.auto_close]
+}
+
+run "rejects_empty_documentation_content" {
+  variables {
+    documentation = { content = "  " }
+  }
+
+  command = plan
+
+  expect_failures = [var.documentation]
+}
+
+run "rejects_unsupported_documentation_mime_type" {
+  variables {
+    documentation = { content = "runbook", mime_type = "text/plain" }
+  }
+
+  command = plan
+
+  expect_failures = [var.documentation]
+}
+
+run "rejects_uppercase_user_label_key" {
+  variables {
+    user_labels = { Team = "platform" }
+  }
+
+  command = plan
+
+  expect_failures = [var.user_labels]
+}
+
+run "rejects_user_label_value_with_spaces" {
+  variables {
+    user_labels = { team = "platform team" }
+  }
+
+  command = plan
+
+  expect_failures = [var.user_labels]
+}

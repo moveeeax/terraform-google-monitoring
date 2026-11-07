@@ -38,6 +38,11 @@ module "monitoring" {
   display_name    = "High CPU utilization"
   threshold_value = 0.8
   duration        = "120s"
+  severity        = "WARNING"
+
+  documentation = {
+    content = "CPU utilization above 80% for 2 minutes. Check the instance's top processes before scaling."
+  }
 
   notification_channels = [google_monitoring_notification_channel.email.id]
 }
